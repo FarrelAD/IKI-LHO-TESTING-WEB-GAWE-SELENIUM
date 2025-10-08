@@ -235,11 +235,11 @@ def main():
             'deskripsi': 'This is a test competition for automation testing purposes. It includes various challenges and tasks.',
             'link_website': 'https://example.com/competition',
             'bidang_keahlian_index': 1,  # Select second option (index starts from 0)
-            'tanggal_mulai': '2024-12-01',
+            'tanggal_mulai': '01-12-2024',
             'penyelenggara_index': 1,  # Select second option
             'tingkat_lomba_index': 1,  # Select second option
             'jumlah_anggota': 3,
-            'tanggal_selesai': '2024-12-31',
+            'tanggal_selesai': '31-12-2024',
             'penyelenggara_nama': 'Test Organizer Name',  # NEW FIELD
             'kota_index': 1,  # NEW FIELD - Select second city option
             'foto_pamflet_path': '../../assets/lomba-nasional.jpg'  # Update this path to your actual image file
