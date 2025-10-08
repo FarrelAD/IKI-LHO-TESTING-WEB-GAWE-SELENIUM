@@ -3,21 +3,39 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.webdriver import WebDriver
 import time
-import os
+from pathlib import Path
+from typing import Optional, TypedDict
+
+
+class CompetitionData(TypedDict):
+    nama: str
+    deskripsi: str
+    link_website: str
+    bidang_keahlian_index: int
+    tanggal_mulai: str
+    penyelenggara_index: int
+    tingkat_lomba_index: int
+    jumlah_anggota: int
+    tanggal_selesai: str
+    penyelenggara_nama: str
+    kota_index: int
+    foto_pamflet_path: str
+
 
 class TestCompetitionManagement:
-    def __init__(self):
-        self.driver = None
-        self.wait = None
+    def __init__(self) -> None:
+        self.driver: Optional[WebDriver] = None
+        self.wait: Optional[WebDriverWait] = None
     
-    def setup(self):
+    def setup(self) -> None:
         """Setup WebDriver"""
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        
         # Remove headless mode to see the browser actions
         # chrome_options.add_argument("--headless")
         
@@ -25,13 +43,20 @@ class TestCompetitionManagement:
         # self.driver.maximize_window()
         self.wait = WebDriverWait(self.driver, 10)
     
-    def teardown(self):
+    def teardown(self) -> None:
         """Cleanup WebDriver"""
         if self.driver:
             self.driver.quit()
     
-    def login(self, username, password):
+    def login(
+        self, 
+        username: str, 
+        password: str
+    ) -> bool:
         """Complete login flow"""
+        if not self.driver or not self.wait:
+            raise RuntimeError("WebDriver not initialized. Call setup() first.")
+        
         try:
             # Step 1: Navigate directly to login page
             print("Step 1: Navigating to login page...")
@@ -71,8 +96,14 @@ class TestCompetitionManagement:
             print(f"❌ Error during login: {str(e)}")
             return False
 
-    def test_add_competition(self, competition_data):
+    def test_add_competition(
+        self, 
+        competition_data: CompetitionData
+    ) -> bool:
         """Test the complete add competition flow"""
+        if not self.driver or not self.wait:
+            raise RuntimeError("WebDriver not initialized. Call setup() first.")
+        
         try:
             # Step 6: Ensure we're on dashboard
             print("Step 6: Navigating to dashboard...")
@@ -127,78 +158,80 @@ class TestCompetitionManagement:
             # Step 13: Select expertise field (bidang keahlian)
             print("Step 13: Selecting expertise field...")
             bidang_keahlian_select = Select(self.driver.find_element(By.ID, "bidang_keahlian_id_create"))
-            bidang_keahlian_select.select_by_index(competition_data['bidang_keahlian_index'])  # Select by index
+            bidang_keahlian_select.select_by_index(competition_data['bidang_keahlian_index'])
             time.sleep(1)
             
-            # Step 15: Fill start date
-            print("Step 15: Filling start date...")
+            # Step 14: Fill start date
+            print("Step 14: Filling start date...")
             tanggal_mulai = self.driver.find_element(By.ID, "tanggal_mulai")
             tanggal_mulai.clear()
             tanggal_mulai.send_keys(competition_data['tanggal_mulai'])
             time.sleep(1)
             
-            # Step 16: Select organizer
-            print("Step 16: Selecting organizer...")
+            # Step 15: Select organizer
+            print("Step 15: Selecting organizer...")
             penyelenggara_select = Select(self.driver.find_element(By.ID, "penyelenggara_id"))
-            penyelenggara_select.select_by_index(competition_data['penyelenggara_index'])  # Select by index
+            penyelenggara_select.select_by_index(competition_data['penyelenggara_index'])
             time.sleep(1)
             
-            # Step 17: Select competition level
-            print("Step 17: Selecting competition level...")
+            
+            if competition_data['penyelenggara_index'] == 1:
+                # Step 15-a: Fill organizer name
+                print("Step 15.a: Filling organizer name...")
+                penyelenggara_nama = self.driver.find_element(By.ID, "penyelenggara_nama")
+                penyelenggara_nama.clear()
+                penyelenggara_nama.send_keys(competition_data['penyelenggara_nama'])
+                time.sleep(1)
+                
+                # Step 15.b: Select city
+                print("Step 15.b: Selecting city...")
+                kota_select = Select(self.driver.find_element(By.ID, "kota_id"))
+                kota_select.select_by_index(competition_data['kota_index'])
+                time.sleep(1)
+            
+            # Step 16: Select competition level
+            print("Step 16: Selecting competition level...")
             tingkat_lomba_select = Select(self.driver.find_element(By.ID, "tingkat_lomba_id"))
-            tingkat_lomba_select.select_by_index(competition_data['tingkat_lomba_index'])  # Select by index
+            tingkat_lomba_select.select_by_index(competition_data['tingkat_lomba_index']) 
             time.sleep(1)
             
-            # Step 18: Fill number of members
-            print("Step 18: Filling number of members...")
+            # Step 17: Fill number of members
+            print("Step 17: Filling number of members...")
             jumlah_anggota = self.driver.find_element(By.ID, "jumlah_anggota")
             jumlah_anggota.clear()
             jumlah_anggota.send_keys(str(competition_data['jumlah_anggota']))
             time.sleep(1)
             
-            # Step 19: Fill end date
-            print("Step 19: Filling end date...")
+            # Step 18: Fill end date
+            print("Step 18: Filling end date...")
             tanggal_selesai = self.driver.find_element(By.ID, "tanggal_selesai")
             tanggal_selesai.clear()
             tanggal_selesai.send_keys(competition_data['tanggal_selesai'])
             time.sleep(1)
             
-            # Step 20: Fill organizer name
-            print("Step 19.1: Filling organizer name...")
-            penyelenggara_nama = self.driver.find_element(By.ID, "penyelenggara_nama")
-            penyelenggara_nama.clear()
-            penyelenggara_nama.send_keys(competition_data['penyelenggara_nama'])
-            time.sleep(1)
-            
-            # Step 21: Select city
-            print("Step 19.2: Selecting city...")
-            kota_select = Select(self.driver.find_element(By.ID, "kota_id"))
-            kota_select.select_by_index(competition_data['kota_index'])  # Select by index
-            time.sleep(1)
-            
-            # Step 22: Upload pamphlet image
-            print("Step 20: Uploading pamphlet image...")
+            # Step 19: Upload pamphlet image
+            print("Step 19: Uploading pamphlet image...")
             if competition_data.get('foto_pamflet_path'):
                 # Convert relative path to absolute path
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                absolute_path = os.path.abspath(os.path.join(script_dir, competition_data['foto_pamflet_path']))
+                script_dir = Path(__file__).resolve().parent
+                absolute_path = (script_dir / competition_data['foto_pamflet_path']).resolve()
                 
                 print(f"Script directory: {script_dir}")
                 print(f"Relative path: {competition_data['foto_pamflet_path']}")
                 print(f"Absolute path: {absolute_path}")
                 
-                if os.path.exists(absolute_path):
+                if absolute_path.exists():
                     foto_pamflet = self.driver.find_element(By.ID, "foto_pamflet")
-                    foto_pamflet.send_keys(absolute_path)
+                    foto_pamflet.send_keys(str(absolute_path))
                     time.sleep(2)
-                    print(f"✅ Image uploaded successfully: {os.path.basename(absolute_path)}")
+                    print(f"✅ Image uploaded successfully: {absolute_path.name}")
                 else:
-                    print(f"❌ Image file not found: {absolute_path}")
+                    print(f"❌ Image file not found: {str(absolute_path)}")
             else:
                 print("⚠️ No pamphlet image path provided, skipping...")
             
-            # Step 23: Click save button
-            print("Step 21: Clicking save button...")
+            # Step 20: Click save button
+            print("Step 20: Clicking save button...")
             save_button = self.driver.find_element(By.CSS_SELECTOR, 'button[type="submit"].btn.btn-primary.ml-2')
             save_button.click()
             time.sleep(3)
@@ -210,7 +243,7 @@ class TestCompetitionManagement:
             print(f"❌ Error during competition creation test: {str(e)}")
             return False
 
-def main():
+def main() -> None:
     """Main function to run the test"""
     test = TestCompetitionManagement()
     
@@ -230,19 +263,19 @@ def main():
             return
         
         # Competition data to fill in the form
-        competition_data = {
+        competition_data: CompetitionData = {
             'nama': 'Test Competition 2024',
             'deskripsi': 'This is a test competition for automation testing purposes. It includes various challenges and tasks.',
             'link_website': 'https://example.com/competition',
-            'bidang_keahlian_index': 1,  # Select second option (index starts from 0)
+            'bidang_keahlian_index': 1,
             'tanggal_mulai': '01-12-2024',
-            'penyelenggara_index': 1,  # Select second option
-            'tingkat_lomba_index': 1,  # Select second option
+            'penyelenggara_index': 1,
+            'tingkat_lomba_index': 1,
             'jumlah_anggota': 3,
             'tanggal_selesai': '31-12-2024',
-            'penyelenggara_nama': 'Test Organizer Name',  # NEW FIELD
-            'kota_index': 1,  # NEW FIELD - Select second city option
-            'foto_pamflet_path': '../../assets/lomba-nasional.jpg'  # Update this path to your actual image file
+            'penyelenggara_nama': 'Test Organizer Name',
+            'kota_index': 1,
+            'foto_pamflet_path': '../../assets/lomba-nasional.jpg'
         }
         
         success = test.test_add_competition(competition_data)
@@ -254,10 +287,8 @@ def main():
             
     except Exception as e:
         print(f"❌ Unexpected error: {str(e)}")
-        
     finally:
-        # Cleanup
-        input("Press Enter to close the browser...")  # Pause to see results
+        input("Press Enter to close the browser...")
         test.teardown()
 
 if __name__ == "__main__":
