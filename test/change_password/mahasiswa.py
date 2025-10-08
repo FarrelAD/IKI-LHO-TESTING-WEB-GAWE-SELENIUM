@@ -12,7 +12,7 @@ class TestChangePassword:
         self.driver: Optional[WebDriver] = None
         self.wait: Optional[WebDriverWait] = None
     
-    def setup(self):
+    def setup(self) -> None:
         """Setup WebDriver"""
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")

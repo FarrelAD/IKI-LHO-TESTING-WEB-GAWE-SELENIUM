@@ -2,20 +2,22 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.webdriver import WebDriver
 import time
+from typing import Optional
 
 class TestChangePassword:
-    def __init__(self):
-        self.driver = None
-        self.wait = None
+    def __init__(self) -> None:
+        self.driver: Optional[WebDriver] = None
+        self.wait: Optional[WebDriverWait] = None
     
-    def setup(self):
+    def setup(self) -> None:
         """Setup WebDriver"""
         chrome_options = Options()
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        
         # Remove headless mode to see the browser actions
         # chrome_options.add_argument("--headless")
         
@@ -23,13 +25,20 @@ class TestChangePassword:
         # self.driver.maximize_window()
         self.wait = WebDriverWait(self.driver, 10)
     
-    def teardown(self):
+    def teardown(self) -> None:
         """Cleanup WebDriver"""
         if self.driver:
             self.driver.quit()
     
-    def login(self, username, password):
+    def login(
+        self, 
+        username: str, 
+        password: str
+    ) -> bool:
         """Complete login flow"""
+        if not self.driver or not self.wait:
+            raise RuntimeError("WebDriver not initialized. Call setup() first.")
+        
         try:
             # Step 1: Navigate directly to login page
             print("Step 1: Navigating to login page...")
@@ -69,8 +78,15 @@ class TestChangePassword:
             print(f"❌ Error during login: {str(e)}")
             return False
     
-    def test_change_password(self, old_password, new_password):
+    def test_change_password(
+        self, 
+        old_password: str, 
+        new_password: str
+    ):
         """Test the complete password change flow"""
+        if not self.driver or not self.wait:
+            raise RuntimeError("WebDriver not initialized. Call setup() first.")
+        
         try:
             # Step 6: Ensure we're on dashboard
             print("Step 6: Navigating to dashboard...")
@@ -170,10 +186,8 @@ def main():
             
     except Exception as e:
         print(f"❌ Unexpected error: {str(e)}")
-        
     finally:
-        # Cleanup
-        input("Press Enter to close the browser...")  # Pause to see results
+        input("Press Enter to close the browser...")
         test.teardown()
 
 if __name__ == "__main__":
